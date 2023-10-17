@@ -45,13 +45,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        iniLoadOpenCV();//加载OpenCV的本地库
-        processBtn = (Button) findViewById(R.id.process_btn);//实例化按钮并添加事件响应
-        processBtn.setOnClickListener(this);
+        //加载OpenCV库
+        iniLoadOpenCV();
 
+        //实例化按钮并添加事件响应
+        processBtn = (Button) findViewById(R.id.process_btn);
+        processBtn.setOnClickListener(this);
         takePicBtn = (Button)this.findViewById(R.id.select_pic_btn);
         takePicBtn.setOnClickListener(this);
-
         selectPicBtn = (Button)this.findViewById(R.id.take_pic_btn);
         selectPicBtn.setOnClickListener(this);
 
@@ -61,13 +62,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         builder.detectFileUriExposure();
     }
 
-    //加载OpenCV的本地库
+    //加载OpenCV库
     private void iniLoadOpenCV(){
         boolean success = OpenCVLoader.initDebug();
         if(success){
-            Log.i(CV_TAG,"OpenCV Libraries loaded...");
+            Log.i(CV_TAG,"OpenCV库加载成功");
         }else{
-            Toast.makeText(this.getApplicationContext(), "WARNING: Could not load OpenCV Libraries!", Toast.LENGTH_LONG).show();
+            Toast.makeText(this.getApplicationContext(), "无法加载OpenCV库", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -96,11 +97,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     //智能检测
     private void detect() {
+        //读取图像
         Mat src = new Mat();
         if(fileUri == null)
         {
             // 读取默认图像
-            Bitmap bmtemp = BitmapFactory.decodeResource(this.getResources(),R.drawable.xiaoyan);
+            Bitmap bmtemp = BitmapFactory.decodeResource(this.getResources(),R.drawable.test);
             Utils.bitmapToMat(bmtemp,src);
         }
         else
@@ -117,14 +119,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Imgproc.cvtColor(src, dst, Imgproc.COLOR_BGR2GRAY);
         Imgproc.cvtColor(dst, dst, Imgproc.COLOR_GRAY2BGR);
 
-        // 输出结果
-        if(dst.cols() > 1000 || dst.rows() > 1000) //防止图像过大显示奔溃
-            Imgproc.resize(dst, dst, new Size(dst.cols() / 4, dst.rows() / 4));
-
+        // 转换结果
+        if(dst.cols() > 1024) //防止图像过大显示奔溃
+        {
+            int newWidth = 1024;
+            int newHeight = (int)Math.round(newWidth * 1.0 / dst.cols() * dst.rows());
+            Imgproc.resize(dst, dst, new Size(newWidth, newHeight));
+        }
         Bitmap bitmap = Bitmap.createBitmap(dst.cols(),dst.rows(), Bitmap.Config.ARGB_8888);
         Imgproc.cvtColor(dst, dst, Imgproc.COLOR_BGR2RGBA);
         Utils.matToBitmap(dst, bitmap);
 
+        //显示结果
         ImageView iv = (ImageView)this.findViewById(R.id.sample_img);
         iv.setImageBitmap(bitmap);
         src.release();
@@ -144,7 +150,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*");
         startActivityForResult(Intent.createChooser(intent, "图像选择..."), REQUEST_CAPTURE_IMAGE);
-
     }
 
     //图片回调显示到设备屏幕上
@@ -164,23 +169,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //显示图片（自动缩放）
     private void displaySelectedImage() {
         if(fileUri == null) return;
-        ImageView imageView = (ImageView)this.findViewById(R.id.sample_img);
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(fileUri.getPath(), options);
-        int w = options.outWidth;
-        int h = options.outHeight;
-        int inSample = 1;
-        if(w > 1000 || h > 1000) {
-            while(Math.max(w/inSample, h/inSample) > 1000) {
-                inSample *=2;
-            }
+        Mat src = new Mat();
+        src = Imgcodecs.imread(fileUri.getPath());
+        // 转换结果
+        if(src.cols() > 1024) //防止图像过大显示奔溃
+        {
+            int newWidth = 1024;
+            int newHeight = (int)Math.round(newWidth * 1.0 / src.cols() * src.rows());
+            Imgproc.resize(src, src, new Size(newWidth, newHeight));
         }
-        options.inJustDecodeBounds = false;
-        options.inSampleSize = inSample;
-        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-        Bitmap bm = BitmapFactory.decodeFile(fileUri.getPath(), options);
-        imageView.setImageBitmap(bm);
+        Bitmap bitmap = Bitmap.createBitmap(src.cols(),src.rows(), Bitmap.Config.ARGB_8888);
+        Imgproc.cvtColor(src, src, Imgproc.COLOR_BGR2RGBA);
+        Utils.matToBitmap(src, bitmap);
+        //显示结果
+        ImageView iv = (ImageView)this.findViewById(R.id.sample_img);
+        iv.setImageBitmap(bitmap);
+        src.release();
     }
 }
 
