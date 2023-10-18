@@ -18,7 +18,7 @@
         android:layout_height="wrap_content"
         android:layout_toRightOf ="@id/take_pic_btn"
         android:id="@+id/select_pic_btn"
-        android:text="选择照片"/>
+        android:text="相册照片"/>
 
     <Button
         android:layout_width="wrap_content"
