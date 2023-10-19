@@ -79,4 +79,72 @@ public class ImageSelectUtils {
         Imgcodecs.imwrite(tempFile.getAbsolutePath(), image);
     }
 
+    public static void RecursiveCreateDirectories(String fileDir) {
+        String[] fileDirs = fileDir.split("\\/");
+        String topPath = "";
+        for (int i = 0; i < fileDirs.length; i++) {
+            topPath += "/" + fileDirs[i];
+            File file = new File(topPath);
+            if (file.exists()) {
+                continue;
+            } else {
+                file.mkdir();
+            }
+        }
+    }
+
+    public static void copyFileFromAssets(Context appCtx, String srcPath, String dstPath) {
+        if (srcPath.isEmpty() || dstPath.isEmpty()) {
+            return;
+        }
+        String dstDir = dstPath.substring(0, dstPath.lastIndexOf('/'));
+        if (dstDir.length() > 0) {
+            RecursiveCreateDirectories(dstDir);
+        }
+        InputStream is = null;
+        OutputStream os = null;
+        try {
+            is = new BufferedInputStream(appCtx.getAssets().open(srcPath));
+            os = new BufferedOutputStream(new FileOutputStream(new File(dstPath)));
+            byte[] buffer = new byte[1024];
+            int length = 0;
+            while ((length = is.read(buffer)) != -1) {
+                os.write(buffer, 0, length);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                os.close();
+                is.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void copyDirectoryFromAssets(Context appCtx, String srcDir, String dstDir) {
+        if (srcDir.isEmpty() || dstDir.isEmpty()) {
+            return;
+        }
+        try {
+            if (!new File(dstDir).exists()) {
+                new File(dstDir).mkdirs();
+            }
+            for (String fileName : appCtx.getAssets().list(srcDir)) {
+                String srcSubPath = srcDir + File.separator + fileName;
+                String dstSubPath = dstDir + File.separator + fileName;
+                if (new File(srcSubPath).isDirectory()) {
+                    copyDirectoryFromAssets(appCtx, srcSubPath, dstSubPath);
+                } else {
+                    copyFileFromAssets(appCtx, srcSubPath, dstSubPath);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }
