@@ -160,11 +160,22 @@ public class ImageSelectUtils {
         Matrix matrix = new Matrix();
         matrix.postScale(widthScale, heightScale, 0, 0);
         // 如需要可自行设置 Bitmap.Config.RGB_8888 等等
-        Bitmap bmpRet = Bitmap.createBitmap(targetWidth, targetHeight, Bitmap.Config.RGB_565);
+        Bitmap bmpRet = Bitmap.createBitmap(targetWidth, targetHeight, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bmpRet);
         Paint paint = new Paint();
         canvas.drawBitmap(bm, matrix, paint);
         return bmpRet;
+    }
+
+    public static Bitmap adjustPhotoRotation(Bitmap bm, final int orientationDegree) {
+        Matrix m = new Matrix();
+        m.setRotate(orientationDegree, (float) bm.getWidth() / 2, (float) bm.getHeight() / 2);
+        try {
+            Bitmap bm1 = Bitmap.createBitmap(bm, 0, 0, bm.getWidth(), bm.getHeight(), m, true);
+            return bm1;
+        } catch (OutOfMemoryError ex) {
+        }
+        return null;
     }
 
 }
