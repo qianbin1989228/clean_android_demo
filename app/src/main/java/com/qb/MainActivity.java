@@ -1,5 +1,7 @@
 package com.qb;
 
+import static com.qb.ImageSelectUtils.copyDirectoryFromAssets;
+
 import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -26,8 +28,6 @@ import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
-
-import org.opencv.core.Mat;
 
 import java.io.File;
 
@@ -96,45 +96,42 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     //智能检测
-    private void detect() {
+    private void detect(){
         //读取图像
-        Mat src = new Mat();
-        if(fileUri == null)
-        {
+        Bitmap bmtemp;
+        if(fileUri == null) {
             // 读取默认图像
-            Bitmap bmtemp = BitmapFactory.decodeResource(this.getResources(),R.drawable.test);
-            Utils.bitmapToMat(bmtemp,src);
+            bmtemp = BitmapFactory.decodeResource(this.getResources(),R.drawable.test);
         }
-        else
-        {
+        else {
             // 读取摄像头或相册中图像
-            src = Imgcodecs.imread(fileUri.getPath());
+            try{
+                bmtemp = MediaStore.Images.Media.getBitmap(this.getContentResolver(), fileUri);
+            }catch (Exception e){
+                e.printStackTrace();
+                return;
+            }
         }
-        if(src.empty())
-            return;
 
-        Mat dst = new Mat();
-
-        // 智能处理
-        Imgproc.cvtColor(src, dst, Imgproc.COLOR_BGR2GRAY);
-        Imgproc.cvtColor(dst, dst, Imgproc.COLOR_GRAY2BGR);
-
-        // 转换结果
-        if(dst.cols() > 1024) //防止图像过大显示奔溃
-        {
+        //智能检测
+        Mat img = new Mat();
+        Utils.bitmapToMat(bmtemp,img);
+        if(img.cols() > 1024) { //防止图像过大显示奔溃
             int newWidth = 1024;
-            int newHeight = (int)Math.round(newWidth * 1.0 / dst.cols() * dst.rows());
-            Imgproc.resize(dst, dst, new Size(newWidth, newHeight));
+            int newHeight = (int)Math.round(newWidth * 1.0 / img.cols() * img.rows());
+            Imgproc.resize(img, img, new Size(newWidth, newHeight));
         }
-        Bitmap bitmap = Bitmap.createBitmap(dst.cols(),dst.rows(), Bitmap.Config.ARGB_8888);
-        Imgproc.cvtColor(dst, dst, Imgproc.COLOR_BGR2RGBA);
-        Utils.matToBitmap(dst, bitmap);
+        Imgproc.cvtColor(img, img, Imgproc.COLOR_BGR2GRAY); //转灰度图
+        Imgproc.cvtColor(img, img, Imgproc.COLOR_GRAY2RGBA);
 
         //显示结果
+        Bitmap bmshow = Bitmap.createBitmap(img.cols(),img.rows(), Bitmap.Config.ARGB_8888);
+        Utils.matToBitmap(img, bmshow);
         ImageView iv = (ImageView)this.findViewById(R.id.sample_img);
-        iv.setImageBitmap(bitmap);
-        src.release();
-        dst.release();
+        iv.setImageBitmap(bmshow);
+
+        //释放内存
+        img.release();
     }
 
     //启动相机拍照
