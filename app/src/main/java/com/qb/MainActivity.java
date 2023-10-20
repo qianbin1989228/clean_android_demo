@@ -1,6 +1,7 @@
 package com.qb;
 
 import static com.qb.ImageSelectUtils.copyDirectoryFromAssets;
+import static com.qb.ImageSelectUtils.zoomImg2;
 
 import android.Manifest;
 import android.content.Intent;
@@ -113,14 +114,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
-        //智能检测
+        //缩放,防止图像过大显示奔溃
+        if(bmtemp.getWidth() > 1024) { //防止图像过大显示奔溃
+            int newWidth = 1024;
+            int newHeight = (int)Math.round(newWidth * 1.0 / bmtemp.getWidth() * bmtemp.getHeight());
+            bmtemp = zoomImg2(bmtemp,newWidth,newHeight);
+        }
+
+        //算法处理
         Mat img = new Mat();
         Utils.bitmapToMat(bmtemp,img);
-        if(img.cols() > 1024) { //防止图像过大显示奔溃
-            int newWidth = 1024;
-            int newHeight = (int)Math.round(newWidth * 1.0 / img.cols() * img.rows());
-            Imgproc.resize(img, img, new Size(newWidth, newHeight));
-        }
         Imgproc.cvtColor(img, img, Imgproc.COLOR_BGR2GRAY); //转灰度图
         Imgproc.cvtColor(img, img, Imgproc.COLOR_GRAY2RGBA);
 
