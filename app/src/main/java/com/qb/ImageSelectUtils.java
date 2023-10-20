@@ -1,7 +1,12 @@
 package com.qb;
 
+import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.DocumentsContract;
@@ -145,6 +150,21 @@ public class ImageSelectUtils {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static Bitmap zoomImg2(Bitmap bm, int targetWidth, int targetHeight) {
+        int srcWidth = bm.getWidth();
+        int srcHeight = bm.getHeight();
+        float widthScale = targetWidth * 1.0f / srcWidth;
+        float heightScale = targetHeight * 1.0f / srcHeight;
+        Matrix matrix = new Matrix();
+        matrix.postScale(widthScale, heightScale, 0, 0);
+        // 如需要可自行设置 Bitmap.Config.RGB_8888 等等
+        Bitmap bmpRet = Bitmap.createBitmap(targetWidth, targetHeight, Bitmap.Config.RGB_565);
+        Canvas canvas = new Canvas(bmpRet);
+        Paint paint = new Paint();
+        canvas.drawBitmap(bm, matrix, paint);
+        return bmpRet;
     }
 
 }
