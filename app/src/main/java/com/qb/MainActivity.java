@@ -1,9 +1,11 @@
 package com.qb;
 
+import static com.qb.ImageSelectUtils.adjustPhotoRotation;
 import static com.qb.ImageSelectUtils.copyDirectoryFromAssets;
 import static com.qb.ImageSelectUtils.zoomImg2;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -26,6 +28,8 @@ import android.widget.Toast;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
@@ -124,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //算法处理
         Mat img = new Mat();
         Utils.bitmapToMat(bmtemp,img);
-        Imgproc.cvtColor(img, img, Imgproc.COLOR_BGR2GRAY); //转灰度图
+        Imgproc.cvtColor(img, img, Imgproc.COLOR_RGBA2GRAY); //转灰度图
         Imgproc.cvtColor(img, img, Imgproc.COLOR_GRAY2RGBA);
 
         //显示结果
